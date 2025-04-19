@@ -1,0 +1,13 @@
+# Ignore node_modules folder
+node_modules
+
+# Ignore npm debug logs
+npm-debug.log
+
+# Ignore git history and config
+.git
+.gitignore
+
+# Optionally ignore Dockerfile and .dockerignore if not needed in context
+Dockerfile
+.dockerignore

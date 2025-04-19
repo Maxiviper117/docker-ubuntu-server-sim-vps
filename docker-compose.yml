@@ -1,0 +1,31 @@
+services:
+  vps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env    
+    environment:
+      - SSH_PUB_KEY=${SSH_PUB_KEY}
+    ports:
+      - "2222:22"
+      - "2375:2375"
+      - "8080:80"
+      - "8443:443"
+    privileged: true
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    container_name: ubuntu-vps-simulate
+    image: maxiviper117/ubuntu-vps-simulate
+    volumes:
+      - vps_docker:/var/lib/docker
+    # healthcheck:
+    #   test: ["CMD-SHELL", "sshd -T >/dev/null"]
+    #   interval: 30s
+    #   timeout: 5s
+    #   retries: 3  
+
+volumes:
+  vps_docker:
+    driver: local
