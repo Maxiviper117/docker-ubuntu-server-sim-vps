@@ -82,7 +82,7 @@ docker run -d \
   -p 8443:443 \
   --privileged \
   --name ubuntu-vps-simulate \
-  maxiviper117/ubuntu-vps-simulate
+  my-ubuntu-vps-sim
 ```
 
 ---
