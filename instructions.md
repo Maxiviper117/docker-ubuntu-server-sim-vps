@@ -117,6 +117,7 @@ Fix it with:
 ```bash
 ssh-keygen -R "[localhost]:2222"
 ```
+> This command removes the old host key from your known hosts file.
 
 Then try again:
 
