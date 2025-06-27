@@ -96,7 +96,7 @@ Host localhost-root
     HostName localhost
     User root
     Port 2222
-    IdentityFile "C:\Users\david\.ssh\SSH-Key-Windows-Desktop"
+    IdentityFile "C:\Users\{username}\.ssh\SSH-Key-Windows-Desktop"
 ```
 
 > [!NOTE]
