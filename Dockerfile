@@ -5,6 +5,11 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install dependencies
+# openssh-server: for SSH access
+# curl: for downloading files and Docker GPG key
+# ca-certificates: for HTTPS support
+# gnupg: for handling GPG keys (Docker repo)
+# lsb-release: for detecting Ubuntu version (Docker repo)
 RUN apt-get update && \
     apt-get install -y \
     openssh-server \
@@ -16,6 +21,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install Docker
+# Set up Docker's official GPG key and repository, then install Docker Engine and CLI
 RUN install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     chmod a+r /etc/apt/keyrings/docker.gpg && \
@@ -55,6 +61,7 @@ RUN echo '#!/bin/bash\n\
     chmod +x /start.sh
 
 # Install tini for proper signal handling and graceful shutdown
+# tini: minimal init system to handle signals and zombie processes
 RUN apt-get update && apt-get install -y tini && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy entrypoint
