@@ -96,9 +96,10 @@ Host localhost-root
     HostName localhost
     User root
     Port 2222
-    IdentityFile "C:\Users\david\.ssh\SSH-Key-Windows-Desktop"
+    IdentityFile "C:\Users\{username}\.ssh\SSH-Key-Windows-Desktop"
 ```
 
+> [!NOTE]
 > ✅ **1Password Note**: If you're using a 1Password-managed key, you may need to approve the connection when prompted via the 1Password app.
 
 Now you can connect with a simple command:
@@ -111,12 +112,13 @@ ssh localhost-root
 
 ## 📤 Step 6: (Optional) Copy Your Public Key to the Container After Running
 
-> **Note:** The SSH public key is already added to the container during the Docker image build, using the key defined in your `.env` file. You only need to manually copy your public key if you want to override or add additional keys after the container is running.
+> [!NOTE]
+> The SSH public key is already added to the container during the Docker image build, using the key defined in your `.env` file. You only need to manually copy your public key if you want to override or add additional keys after the container is running.
 
 Authorize SSH access by copying your public key into the container (if needed):
 
 ```bash
-docker cp "C:\Users\david\.ssh\SSH-Key-Windows-Desktop.pub" ubuntu-vps-simulate:/root/.ssh/authorized_keys
+docker cp "C:\Users\{username}\.ssh\SSH-Key-Windows-Desktop.pub" ubuntu-vps-simulate:/root/.ssh/authorized_keys
 ```
 
 Ensure the container’s `/root/.ssh/authorized_keys` file exists and has correct permissions.
@@ -142,15 +144,17 @@ If you see:
 ```
 WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!
 ```
-
-It likely means the container was recreated and has a new host key.
+> [!WARNING]
+> ⚠️ **Security Note:** In a production environment, seeing this warning is a red flag and could indicate a security risk (such as a man-in-the-middle attack). Always verify the cause before proceeding. However, in this local simulated environment, it's common to see this if you've rebuilt or recreated the container, since the SSH host key changes. You may need to remove the old host entry to connect again.
 
 Fix it with:
 
 ```bash
 ssh-keygen -R "[localhost]:2222"
 ```
-> This command removes the old host key from your known hosts file.
+> [!NOTE]
+> This command removes the old host key from your known hosts file on your local machine.
+> If you are using a different port, replace `2222` with your actual port number.
 
 Then try again:
 
