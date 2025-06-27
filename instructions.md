@@ -1,7 +1,3 @@
-Here’s an improved version of your guide. I've restructured it for clarity, reduced redundancy, and added some minor corrections and formatting improvements. Each section now has a clear goal and logical flow.
-
----
-
 # 🚀 SSH & Docker Setup Guide for `ubuntu-vps-simulate`
 
 This guide helps you run a simulated Ubuntu VPS using Docker and connect to it over SSH with ease.
