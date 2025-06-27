@@ -54,12 +54,15 @@ RUN echo '#!/bin/bash\n\
     /usr/sbin/sshd -D' > /start.sh && \
     chmod +x /start.sh
 
+# Install tini for proper signal handling and graceful shutdown
+RUN apt-get update && apt-get install -y tini && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Copy entrypoint
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-# Use it to inject SSH_PUB_KEY then run /start.sh
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+# Use tini as the entrypoint for signal forwarding and graceful shutdown
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
 CMD ["/start.sh"]
 
 # Build:
