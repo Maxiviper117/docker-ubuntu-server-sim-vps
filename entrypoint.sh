@@ -1,6 +1,7 @@
 #!/bin/sh
 set -e
 
+# Get the SSH public key from the environment variable SSH_PUB_KEY
 # exit if SSH_PUB_KEY is empty or not set
 if [ -z "$SSH_PUB_KEY" ]; then
     echo "Error: SSH_PUB_KEY env var is empty or not set" >&2

@@ -68,35 +68,5 @@ CMD ["/start.sh"]
 # Tag the image with the current date and time in powershell:
 # $date = Get-Date -Format "yyyyMMdd-HHmmss" ; docker tag maxiviper117/ubuntu-vps-simulate maxiviper117/ubuntu-vps-simulate:$date
 
-# Push to Docker Hub:
 
 
-# Run:
-# docker run -d -p 2222:22 -p 2375:2375 -p 8080:80 -p 8443:443 --privileged --name ubuntu-vps-simulate maxiviper117/ubuntu-vps-simulate
-
-# Note: Before connecting, you'll need to:
-# 1. Generate an SSH key pair
-# 2. Copy your public key to the container
-# 3. Connect using: ssh -i /path/to/private_key root@localhost -p 2222
-
-# Using 1password to copy the public key to $publicKey terminal session variable for 1password ssh key stored in 'Docker Simulated VPS' item
-# $publicKey = op item get "Docker Simulated VPS" --fields "public key" 
-
-# $publicKey | docker exec -i ubuntu-vps-simulate sh -c 'mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys'
-
-# Add to ~/.ssh/config file:
-# Host localhost-root
-    # HostName localhost
-    # User root
-    # Port 2222
-    # IdentityAgent "\\.\pipe\openssh-ssh-agent"
-    # IdentitiesOnly yes
-
-# Login using:
-# ssh localhost-root
-
-# If you want to use ssh root@localhost -p 2222 directly, you must use define IdentityAgent in the same command:
-# ssh -o IdentityAgent=\\.\pipe\openssh-ssh-agent root@localhost -p 2222
-# else ssh does not know where to find the private key - in this case we useing 1password ssh agent for the key
-
-# If prompted for a password, use 'dockerroot' (or change the password in the Dockerfile)
