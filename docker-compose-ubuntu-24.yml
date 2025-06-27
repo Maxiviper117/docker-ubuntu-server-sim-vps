@@ -2,7 +2,7 @@ services:
   vps:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile-ubuntu-24
     env_file:
       - .env    
     environment:
@@ -16,8 +16,8 @@ services:
     stdin_open: true
     tty: true
     restart: unless-stopped
-    container_name: ubuntu-vps-simulate
-    image: ubuntu22-vps-simulate
+    container_name: ubuntu24-vps-simulate
+    image: ubuntu24-vps-simulate
     volumes:
       - vps_docker:/var/lib/docker
     # healthcheck:
