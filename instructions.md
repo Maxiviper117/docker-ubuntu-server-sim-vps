@@ -118,7 +118,7 @@ ssh localhost-root
 Authorize SSH access by copying your public key into the container (if needed):
 
 ```bash
-docker cp "C:\Users\david\.ssh\SSH-Key-Windows-Desktop.pub" ubuntu-vps-simulate:/root/.ssh/authorized_keys
+docker cp "C:\Users\{username}\.ssh\SSH-Key-Windows-Desktop.pub" ubuntu-vps-simulate:/root/.ssh/authorized_keys
 ```
 
 Ensure the container’s `/root/.ssh/authorized_keys` file exists and has correct permissions.
