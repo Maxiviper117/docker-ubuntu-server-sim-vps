@@ -4,9 +4,63 @@ This guide helps you run a simulated Ubuntu VPS using Docker and connect to it o
 
 ---
 
-## 🐳 Step 1: Run the Docker Container
+## 🔐 Step 1: Generate an SSH Key Pair
 
-You can start the container using either Docker Compose or a direct `docker run` command.
+Before building or running the container, you need to generate an SSH key pair. The public key will be added to the container for secure access.
+
+### Option 1: Using 1Password
+
+Generate an Ed25519 SSH key from within the 1Password app.
+Then **download the private key** and save it to:
+
+```bash
+C:\Users\david\.ssh\SSH-Key-Windows-Desktop
+```
+
+### Option 2: Using `ssh-keygen`
+
+```bash
+ssh-keygen -t ed25519 -C "your_email@example.com" -f "C:\Users\david\.ssh\SSH-Key-Windows-Desktop"
+```
+
+This creates both public and private keys at the specified path.
+
+---
+
+## 📋 Step 2: Add Your Public Key to the `.env` File
+
+Copy the contents of your public key (e.g., `C:\Users\david\.ssh\SSH-Key-Windows-Desktop.pub`) and paste it into the appropriate variable in your `.env` file. This ensures the Docker image build will add your key to the container's `authorized_keys`.
+
+---
+
+## 🛠️ Step 3: Build the Docker Image
+
+Build the Docker image locally before running the container. You can name the image whatever you like. For example, to build and tag the image:
+
+```bash
+# Build the image with a custom name and tag
+ docker build -t my-ubuntu-vps-sim .
+```
+
+You can also tag the image with the current date and time (PowerShell example):
+
+```powershell
+$date = Get-Date -Format "yyyyMMdd-HHmmss" ; docker tag my-ubuntu-vps-sim my-ubuntu-vps-sim:$date
+```
+
+If you want to push your custom image to a registry, you can use the provided `push-image.sh` script (Linux/macOS/WSL):
+
+```bash
+./push-image.sh [version]
+```
+
+> The script will use the latest git tag as the version if you do not provide one.
+
+---
+
+## 🐳 Step 4: Run the Docker Container
+
+You can start the container using either Docker Compose or a direct `docker run` command. Make sure your `.env` file is configured with your public key before this step.
 
 ### Option 1: Docker Compose
 
@@ -33,28 +87,7 @@ docker run -d \
 
 ---
 
-## 🔐 Step 2: Generate an SSH Key Pair
-
-### Option 1: Using 1Password
-
-Generate an Ed25519 SSH key from within the 1Password app.
-Then **download the private key** and save it to:
-
-```bash
-C:\Users\david\.ssh\SSH-Key-Windows-Desktop
-```
-
-### Option 2: Using `ssh-keygen`
-
-```bash
-ssh-keygen -t ed25519 -C "your_email@example.com" -f "C:\Users\david\.ssh\SSH-Key-Windows-Desktop"
-```
-
-This creates both public and private keys at the specified path.
-
----
-
-## ⚙️ Step 3: Configure SSH for Easy Access
+## ⚙️ Step 5: Configure SSH for Easy Access
 
 Edit (or create) your SSH config file at `~/.ssh/config` and add:
 
@@ -76,9 +109,9 @@ ssh localhost-root
 
 ---
 
-## 📤 Step 4: Copy Your Public Key to the Container
+## 📤 Step 6: (Optional) Copy Your Public Key to the Container After Running
 
-> **Note:** In this project, the SSH public key is already added to the container during the Docker image build, using the key defined in your `.env` file. You only need to manually copy your public key if you want to override or add additional keys after the container is running.
+> **Note:** The SSH public key is already added to the container during the Docker image build, using the key defined in your `.env` file. You only need to manually copy your public key if you want to override or add additional keys after the container is running.
 
 Authorize SSH access by copying your public key into the container (if needed):
 
@@ -90,7 +123,7 @@ Ensure the container’s `/root/.ssh/authorized_keys` file exists and has correc
 
 ---
 
-## 🔌 Step 5: Connect via SSH
+## 🔌 Step 7: Connect via SSH
 
 Connect using the configured host alias:
 
@@ -131,7 +164,8 @@ ssh localhost-root
 
 You’ve successfully:
 
-* Started the container
 * Generated and configured SSH keys
+* Added your public key to the container build
+* Started the container
 * Connected securely using an alias
 
