@@ -1,14 +1,8 @@
-#######################################################################
-# Ubuntu 24.04 “noble” VPS–style image with OpenSSH *and* Docker-in-Docker
-# (plus tini for proper PID 1 behaviour)
-#######################################################################
 
+# ────────────────────────────────────────────────────────────────────
+# 1. Base image and apt speedup
+# ────────────────────────────────────────────────────────────────────
 FROM ubuntu:24.04
-
-# ────────────────────────────────────────────────────────────────────
-# 0. Non-interactive APT
-# ────────────────────────────────────────────────────────────────────
-ENV DEBIAN_FRONTEND=noninteractive
 
 # Speed up apt
 RUN cat > /etc/apt/apt.conf.d/99custom <<'EOF'
@@ -18,44 +12,45 @@ Acquire::BrokenProxy    "true";
 EOF
 
 # ────────────────────────────────────────────────────────────────────
-# 1. Base packages
+# 2. Environment variables
+# ────────────────────────────────────────────────────────────────────
+ENV DEBIAN_FRONTEND=noninteractive
+
+# ────────────────────────────────────────────────────────────────────
+# 3. Base packages
 # ────────────────────────────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
-        openssh-server          \
-        curl                    \
-        ca-certificates         \
-        gnupg                   \
-        lsb-release             \
-        apt-transport-https     \
-        nano                    \
+    openssh-server \
+    curl \
+    ca-certificates \
+    gnupg \
+    lsb-release \
+    apt-transport-https \
+    nano \
     && rm -rf /var/lib/apt/lists/*
 
 # ────────────────────────────────────────────────────────────────────
-# 2. Docker Engine + CLI (official repo, supports 24.04)
+# 4. Docker installation
 # ────────────────────────────────────────────────────────────────────
 RUN install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
-        gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     chmod a+r /etc/apt/keyrings/docker.gpg && \
-    echo "deb [arch=$(dpkg --print-architecture) \
-        signed-by=/etc/apt/keyrings/docker.gpg] \
-        https://download.docker.com/linux/ubuntu \
-        $(lsb_release -cs) stable" \
-        >/etc/apt/sources.list.d/docker.list && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
     apt-get install -y --no-install-recommends \
-        docker-ce               \
-        docker-ce-cli           \
-        containerd.io           \
-        docker-buildx-plugin    \
-        docker-compose-plugin   \
+    docker-ce \
+    docker-ce-cli \
+    containerd.io \
+    docker-buildx-plugin \
+    docker-compose-plugin \
     && rm -rf /var/lib/apt/lists/*
 
-# Put root in the docker group so `docker` works without sudo
+# Add root to the docker group to run Docker commands
 RUN usermod -aG docker root
 
 # ────────────────────────────────────────────────────────────────────
-# 3. OpenSSH server hardening (key-only auth, root login allowed)
+# 5. SSH server hardening (key-only auth, root login allowed)
 # ────────────────────────────────────────────────────────────────────
 RUN mkdir -p /var/run/sshd && \
     sed -ri 's/^#?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
@@ -63,37 +58,42 @@ RUN mkdir -p /var/run/sshd && \
     sed -ri 's/^#?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config && \
     sed -ri 's@session[[:space:]]\+required[[:space:]]\+pam_loginuid.so@session optional pam_loginuid.so@g' /etc/pam.d/sshd
 
+
 # (Optional) copy your public key into the image at build-time
 # COPY id_rsa.pub /root/.ssh/authorized_keys
 
 # ────────────────────────────────────────────────────────────────────
-# 4. tini (PID 1) for clean signal handling
-# ────────────────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends tini && \
-    rm -rf /var/lib/apt/lists/*
-
-# ────────────────────────────────────────────────────────────────────
-# 5. Convenience startup helpers
-# ────────────────────────────────────────────────────────────────────
-# Start dockerd on TCP 2375 + the default Unix socket, then keep sshd in the foreground
-RUN echo '#!/usr/bin/env bash\n\
-set -e\n\
-dockerd --host=unix:///var/run/docker.sock --host=tcp://0.0.0.0:2375 &\n\
-exec /usr/sbin/sshd -D -e' \
-    > /start.sh && chmod +x /start.sh
-
-# tini passes signals to /start.sh
-ENTRYPOINT ["/usr/bin/tini", "--", "/start.sh"]
-
-# ────────────────────────────────────────────────────────────────────
 # 6. Exposed ports
 # ────────────────────────────────────────────────────────────────────
-EXPOSE 22 2375 80 443
+EXPOSE 22
+EXPOSE 2375
+EXPOSE 80
+EXPOSE 443
 
+# ────────────────────────────────────────────────────────────────────
+# 7. Tini installation
+# ────────────────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends tini && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# ────────────────────────────────────────────────────────────────────
+# 8. dos2unix and entrypoint scripts
+# ────────────────────────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y dos2unix && apt-get clean && rm -rf /var/lib/apt/lists/*
+COPY .infrastructure/scripts/ /usr/local/bin/entrypoints/
+RUN find /usr/local/bin/entrypoints/ -type f -exec dos2unix {} \; && chmod +x /usr/local/bin/entrypoints/*
+
+# ────────────────────────────────────────────────────────────────────
+# 9. Entrypoint and CMD
+# ────────────────────────────────────────────────────────────────────
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoints/entrypoint-wrapper.sh"]
+CMD []
+
+# ────────────────────────────────────────────────────────────────────
+# 10. Build and tag instructions
+# ────────────────────────────────────────────────────────────────────
 # Build:
-#   docker build -t ubuntu24-vps-simulate . -f Dockerfile-Ubuntu-24
+#   docker build -t ubuntu24-vps-sim . -f Dockerfile.Ubuntu-24
 #
 # Run (example):
-#   docker run -d --privileged -p 2222:22 -p 2375:2375 ubuntu24-vps-simulate
+#   docker run -d --privileged -p 2222:22 -p 2375:2375 ubuntu24-vps-sim
 #
-#######################################################################

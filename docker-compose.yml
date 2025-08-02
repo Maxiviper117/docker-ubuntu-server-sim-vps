@@ -1,5 +1,7 @@
 services:
   vps:
+    image: ubuntu22-vps-sim
+    container_name: ubuntu-vps-sim
     build:
       context: .
       dockerfile: Dockerfile
@@ -16,8 +18,6 @@ services:
     stdin_open: true
     tty: true
     restart: unless-stopped
-    container_name: ubuntu-vps-simulate
-    image: ubuntu22-vps-simulate
     volumes:
       - vps_docker:/var/lib/docker
     # healthcheck:

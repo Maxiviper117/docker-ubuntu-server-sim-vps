@@ -77,14 +77,6 @@ EXPOSE 2375
 EXPOSE 80
 EXPOSE 443
 
-# ────────────────────────────────────────────────────────────────────
-# 7. Startup script
-# ────────────────────────────────────────────────────────────────────
-# Create a startup script to launch both dockerd and sshd
-RUN echo '#!/bin/bash\n\
-    dockerd --host=0.0.0.0:2375 --host=unix:///var/run/docker.sock &\n\
-    /usr/sbin/sshd -D' > /start.sh && \
-    chmod +x /start.sh
 
 # ────────────────────────────────────────────────────────────────────
 # 8. Tini installation
@@ -95,22 +87,28 @@ RUN apt-get update && apt-get install -y tini && apt-get clean && rm -rf /var/li
 # ────────────────────────────────────────────────────────────────────
 # 9. Entrypoint and CMD
 # ────────────────────────────────────────────────────────────────────
-# Copy entrypoint
-COPY entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+
+
+
+# Install dos2unix for line ending conversion
+RUN apt-get update && apt-get install -y dos2unix && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Copy all entrypoint scripts, including the wrapper
+COPY .infrastructure/scripts/ /usr/local/bin/entrypoints/
+# Convert all scripts to LF line endings and set executable
+RUN find /usr/local/bin/entrypoints/ -type f -exec dos2unix {} \; && chmod +x /usr/local/bin/entrypoints/*
 
 # Use tini as the entrypoint for signal forwarding and graceful shutdown
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoint.sh"]
-CMD ["/start.sh"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoints/entrypoint-wrapper.sh"]
+CMD []
 
 # ────────────────────────────────────────────────────────────────────
 # 10. Build and tag instructions
 # ────────────────────────────────────────────────────────────────────
 # Build:
-# docker build -t ubuntu22-vps-simulate .
+# docker build -t ubuntu22-vps-sim .
 
 # Tag the image with the current date and time in powershell:
-# $date = Get-Date -Format "yyyyMMdd-HHmmss" ; docker tag ubuntu22-vps-simulate ubuntu22-vps-simulate:$date
+# $date = Get-Date -Format "yyyyMMdd-HHmmss" ; docker tag ubuntu22-vps-sim ubuntu22-vps-sim:$date
 
 
 
