@@ -30,7 +30,7 @@ ssh-keygen -t ed25519 -C "your_email@example.com" -f "C:\Users\<user>\.ssh\SSH-K
 
 ## 📋 Step 2: Add Your Public Key to the `.env` File
 
-Copy the contents of your public key (e.g., `C:\Users\<user>\.ssh\SSH-Key-Windows-Desktop.pub`) and paste it into the SSH_PUB_KEY="" variable in your `.env` file.
+Copy the contents of your public key (e.g., `C:\Users\<user>\.ssh\SSH-Key-Windows-Desktop.pub`) and paste it into the `SSH_PUB_KEY=""` variable in your `.env` file.
 
 ---
 
