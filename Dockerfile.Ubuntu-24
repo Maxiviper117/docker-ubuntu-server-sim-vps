@@ -92,7 +92,7 @@ CMD []
 # 10. Build and tag instructions
 # ────────────────────────────────────────────────────────────────────
 # Build:
-#   docker build -t ubuntu24-vps-sim . -f Dockerfile.Ubuntu-24
+#   docker buildx build  -t ubuntu24-vps-sim . -f Dockerfile.Ubuntu-24
 #
 # Run (example):
 #   docker run -d --privileged -p 2222:22 -p 2375:2375 ubuntu24-vps-sim

@@ -1,4 +1,11 @@
 #!/bin/sh
+# 01-ssh-setup.sh
+#
+# This script sets up SSH key-based authentication for the root user in a container or VM environment.
+# It reads the SSH public key from the SSH_PUB_KEY environment variable, ensures the /root/.ssh directory
+# and authorized_keys file exist with correct permissions, and writes the public key to authorized_keys.
+# If SSH_PUB_KEY is not set, the script exits with an error. Intended for use as an entrypoint or setup script.
+
 set -e
 
 echo "[01-ssh-setup] Starting SSH key setup..."

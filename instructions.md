@@ -14,13 +14,13 @@ Generate an Ed25519 SSH key from within the 1Password app.
 Then **download the private key** and save it to:
 
 ```bash
-C:\Users\david\.ssh\SSH-Key-Windows-Desktop
+C:\Users\<user>\.ssh\SSH-Key-Windows-Desktop
 ```
 
 ### Option 2: Using `ssh-keygen`
 
 ```bash
-ssh-keygen -t ed25519 -C "your_email@example.com" -f "C:\Users\david\.ssh\SSH-Key-Windows-Desktop"
+ssh-keygen -t ed25519 -C "your_email@example.com" -f "C:\Users\<user>\.ssh\SSH-Key-Windows-Desktop"
 ```
 
 This creates both public and private keys at the specified path.
@@ -29,7 +29,7 @@ This creates both public and private keys at the specified path.
 
 ## 📋 Step 2: Add Your Public Key to the `.env` File
 
-Copy the contents of your public key (e.g., `C:\Users\david\.ssh\SSH-Key-Windows-Desktop.pub`) and paste it into the appropriate variable in your `.env` file. This ensures the Docker image build will add your key to the container's `authorized_keys`.
+Copy the contents of your public key (e.g., `C:\Users\<user>\.ssh\SSH-Key-Windows-Desktop.pub`) and paste it into the appropriate variable in your `.env` file. This ensures the Docker image build will add your key to the container's `authorized_keys`.
 
 ---
 

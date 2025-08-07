@@ -1,4 +1,12 @@
 #!/bin/bash
+# 00-startup.sh
+#
+# This script performs essential startup tasks for a container or VM environment:
+# - Removes a stale Docker PID file if present and the process is not running.
+# - Starts the Docker daemon if it is not already running, listening on both TCP and Unix socket.
+# - Starts the SSH daemon in the background if it is not already running.
+# The script does not block; it is intended to be run as an early entrypoint before the main process.
+
 set -e
 
 # [00-startup] Clean up stale Docker PID file if needed

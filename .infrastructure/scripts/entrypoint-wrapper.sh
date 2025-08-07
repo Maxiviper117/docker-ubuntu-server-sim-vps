@@ -1,4 +1,12 @@
 #!/bin/sh
+# entrypoint-wrapper.sh
+#
+# This script serves as a wrapper entrypoint for Docker containers. It locates and executes all executable scripts
+# in the /usr/local/bin/entrypoints/ directory (except itself), in sorted order. If any script fails, the wrapper exits
+# with the same status code. After running all scripts, it blocks indefinitely to keep the container alive.
+#
+# Usage: Set this script as the container's entrypoint. Place additional entrypoint scripts in /usr/local/bin/entrypoints/.
+
 set -e
 
 echo "[entrypoint-wrapper] Starting entrypoint script execution..."
