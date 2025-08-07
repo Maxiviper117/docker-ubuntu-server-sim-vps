@@ -1,10 +1,10 @@
 services:
   vps:
-    image: ubuntu24-vps-sim
-    container_name: ubuntu24-vps-sim
+    image: ubuntu22-vps-sim
+    container_name: ubuntu-vps-sim
     build:
       context: .
-      dockerfile: Dockerfile.Ubuntu-24
+      dockerfile: Dockerfile.22
     env_file:
       - .env    
     environment:
@@ -29,3 +29,6 @@ services:
 volumes:
   vps_docker:
     driver: local
+  
+# to run:
+# docker compose -f docker-compose.22.yml up -d

@@ -145,7 +145,11 @@ If you see:
 WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!
 ```
 > [!WARNING]
-> ⚠️ **Security Note:** In a production environment, seeing this warning is a red flag and could indicate a security risk (such as a man-in-the-middle attack). Always verify the cause before proceeding. However, in this local simulated environment, it's common to see this if you've rebuilt or recreated the container, since the SSH host key changes. You may need to remove the old host entry to connect again.
+> ⚠️ **Security Note:** In a production environment, seeing this warning is a red flag and could indicate a security risk (such as a man-in-the-middle attack). 
+> 
+> Always verify the cause before proceeding. 
+> 
+> ✅ However, in this local simulated environment, it's common to see this if you've rebuilt or recreated the container, since the SSH host key changes. You may need to remove the old host entry to connect again.
 
 Fix it with:
 
