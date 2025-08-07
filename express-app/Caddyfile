@@ -1,3 +1,0 @@
-:80 {
-    reverse_proxy express-app:3000
-}

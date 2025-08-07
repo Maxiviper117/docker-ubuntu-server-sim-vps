@@ -9,6 +9,14 @@
 
 set -e
 
+# [00-startup] Check for SSH_PUB_KEY environment variable
+if [ -z "$SSH_PUB_KEY" ]; then
+    echo "[00-startup] ERROR: SSH_PUB_KEY environment variable is not set or is empty."
+    echo "[00-startup] You must provide SSH_PUB_KEY (your public SSH key) via the .env file or docker compose environment."
+    echo "[00-startup] Exiting container startup."
+    exit 1
+fi
+
 # [00-startup] Clean up stale Docker PID file if needed
 if [ -f /var/run/docker.pid ]; then
     PID=$(cat /var/run/docker.pid)
