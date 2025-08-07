@@ -71,12 +71,12 @@ Host localhost-root
 
 > [!NOTE]
 > If using a 1Password-managed key, approve the connection when prompted via the 1Password app.
-
-Connect with:
-
-```bash
-ssh localhost-root
-```
+> 
+> Connect with:
+> 
+> ```powershell
+> ssh localhost-root
+> ```
 
 ---
 
