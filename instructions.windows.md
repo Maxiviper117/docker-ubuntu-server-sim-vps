@@ -30,7 +30,13 @@ ssh-keygen -t ed25519 -C "your_email@example.com" -f "C:\Users\<user>\.ssh\SSH-K
 
 ## 📋 Step 2: Add Your Public Key to the `.env` File
 
-Copy the contents of your public key (e.g., `C:\Users\<user>\.ssh\SSH-Key-Windows-Desktop.pub`) and paste it into the `SSH_PUB_KEY=""` variable in your `.env` file.
+First, copy the `.env.example` file in the project root and rename it to `.env`:
+
+```powershell
+cp .env.example .env
+```
+
+Then, copy your public key (e.g., from `$HOME/.ssh/SSH-Key-Linux-Mac.pub`) and paste it into the `SSH_PUB_KEY` variable in your new `.env` file.
 
 ---
 
