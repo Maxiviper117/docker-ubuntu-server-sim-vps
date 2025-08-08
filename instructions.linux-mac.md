@@ -33,7 +33,13 @@ This creates both public and private keys at the specified path.
 
 ## 📋 Step 2: Add Your Public Key to the `.env` File
 
-Copy the contents of your public key (e.g., `$HOME/.ssh/SSH-Key-Linux-Mac.pub`) and paste it into the `SSH_PUB_KEY=""` variable in your `.env` file.
+First, copy the `.env.example` file in the project root and rename it to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Then, copy your public key (e.g., from `$HOME/.ssh/SSH-Key-Linux-Mac.pub`) and paste it into the `SSH_PUB_KEY` variable in your new `.env` file.
 
 ---
 
