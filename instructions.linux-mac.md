@@ -1,4 +1,4 @@
-# 🚀 SSH & Docker Setup Guide for `ubuntu-vps-simulate` (Linux/macOS)
+# 🚀 SSH & Docker Setup Guide for `ubuntu24-vps-sim` (Linux/macOS)
 
 This guide helps you run a simulated Ubuntu VPS using Docker and connect to it over SSH on Linux or macOS.
 
@@ -80,21 +80,21 @@ Host localhost-root
 > 
 > Connect with:
 > 
-> ```powershell
+> ```bash
 > ssh localhost-root
 > ```
 
 ---
 
-## 📤 Step 6: (Optional) Copy Your Public Key to the Container After Running
+## 📤 Step 6: (Optional) Temporarily Replace the Public Key
 
-If you want to override or add additional keys after the container is running:
+To temporarily replace the authorized key after the container is running:
 
 ```bash
-docker cp "$HOME/.ssh/SSH-Key-Linux-Mac.pub" ubuntu-vps-simulate:/root/.ssh/authorized_keys
+docker cp "$HOME/.ssh/SSH-Key-Linux-Mac.pub" ubuntu24-vps-sim:/root/.ssh/authorized_keys
 ```
 
-Ensure the container’s `/root/.ssh/authorized_keys` file exists and has correct permissions.
+This replaces the entire `authorized_keys` file. The key from `SSH_PUB_KEY` in `.env` is restored the next time the container starts. Update `.env` for a persistent change.
 
 ---
 
@@ -135,6 +135,6 @@ ssh localhost-root
 You’ve successfully:
 
 * Generated and configured SSH keys
-* Added your public key to the container build
+* Supplied your public key to the container at runtime
 * Started the container
 * Connected securely using an alias

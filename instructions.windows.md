@@ -1,4 +1,4 @@
-# 🚀 SSH & Docker Setup Guide for `ubuntu-vps-simulate` (Windows)
+# 🚀 SSH & Docker Setup Guide for `ubuntu24-vps-sim` (Windows)
 
 This guide helps you run a simulated Ubuntu VPS using Docker and connect to it over SSH on Windows.
 
@@ -36,7 +36,11 @@ First, copy the `.env.example` file in the project root and rename it to `.env`:
 cp .env.example .env
 ```
 
-Then, copy your public key (e.g., from `$HOME/.ssh/SSH-Key-Linux-Mac.pub`) and paste it into the `SSH_PUB_KEY` variable in your new `.env` file.
+Then, copy your public key from `$HOME/.ssh/SSH-Key-Windows-Desktop.pub` and paste it into the `SSH_PUB_KEY` variable in your new `.env` file:
+
+```powershell
+Get-Content "$HOME\.ssh\SSH-Key-Windows-Desktop.pub"
+```
 
 ---
 
@@ -84,15 +88,15 @@ Host localhost-root
 
 ---
 
-## 📤 Step 6: (Optional) Copy Your Public Key to the Container After Running
+## 📤 Step 6: (Optional) Temporarily Replace the Public Key
 
-If you want to override or add additional keys after the container is running:
+To temporarily replace the authorized key after the container is running:
 
 ```powershell
-docker cp "C:\Users\{username}\.ssh\SSH-Key-Windows-Desktop.pub" ubuntu-vps-simulate:/root/.ssh/authorized_keys
+docker cp "C:\Users\{username}\.ssh\SSH-Key-Windows-Desktop.pub" ubuntu24-vps-sim:/root/.ssh/authorized_keys
 ```
 
-Ensure the container’s `/root/.ssh/authorized_keys` file exists and has correct permissions.
+This replaces the entire `authorized_keys` file. The key from `SSH_PUB_KEY` in `.env` is restored the next time the container starts. Update `.env` for a persistent change.
 
 ---
 
@@ -133,6 +137,6 @@ ssh localhost-root
 You’ve successfully:
 
 * Generated and configured SSH keys
-* Added your public key to the container build
+* Supplied your public key to the container at runtime
 * Started the container
 * Connected securely using an alias
