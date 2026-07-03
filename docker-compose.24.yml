@@ -11,7 +11,7 @@ services:
       - SSH_PUB_KEY=${SSH_PUB_KEY}
     ports:
       - "2222:22"
-      - "2375:2375"
+      - "127.0.0.1:2375:2375"
       - "8080:80"
       - "8443:443"
     privileged: true

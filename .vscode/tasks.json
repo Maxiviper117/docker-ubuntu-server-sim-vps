@@ -1,0 +1,27 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run reset-ssh-and-up.ps1",
+            "type": "shell",
+            "command": "powershell -ExecutionPolicy Bypass -File helpers/reset-ssh-and-up.ps1",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        {
+            "label": "Run reset-ssh-and-up.sh",
+            "type": "shell",
+            "command": "bash helpers/reset-ssh-and-up.sh",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        }
+    ]
+}
