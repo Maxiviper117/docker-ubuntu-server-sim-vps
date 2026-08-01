@@ -1,7 +1,6 @@
 services:
   vps:
     image: ubuntu24-vps-sim
-    container_name: ubuntu24-vps-sim
     build:
       context: .
       dockerfile: Dockerfile.24
@@ -10,21 +9,25 @@ services:
     environment:
       - SSH_PUB_KEY=${SSH_PUB_KEY}
     ports:
-      - "2222:22"
-      - "127.0.0.1:2375:2375"
-      - "8080:80"
-      - "8443:443"
+      - "${VPS_SSH_PORT:-2222}:22"
+      # Keep the unauthenticated Docker API on localhost. Do not expose this port externally.
+      - "127.0.0.1:${VPS_DOCKER_API_PORT:-2375}:2375"
+      - "${VPS_HTTP_PORT:-8080}:80"
+      - "${VPS_HTTPS_PORT:-8443}:443"
+    # Privileged mode supports Docker-in-Docker. It does not provide a security boundary.
     privileged: true
     stdin_open: true
     tty: true
-    restart: unless-stopped
+    # Stop after a failure so tests show the real container state.
+    restart: "no"
     volumes:
       - vps_docker:/var/lib/docker
-    # healthcheck:
-    #   test: ["CMD-SHELL", "sshd -T >/dev/null"]
-    #   interval: 30s
-    #   timeout: 5s
-    #   retries: 3  
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 docker info >/dev/null 2>&1 && timeout 5 bash -c '</dev/tcp/127.0.0.1/22' 2>/dev/null"]
+      interval: 5s
+      timeout: 6s
+      start_period: 10s
+      retries: 6
 
 volumes:
   vps_docker:

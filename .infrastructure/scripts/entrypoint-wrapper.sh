@@ -1,34 +1,80 @@
 #!/bin/sh
 # entrypoint-wrapper.sh
 #
-# This script serves as a wrapper entrypoint for Docker containers. It locates and executes all executable scripts
-# in the /usr/local/bin/entrypoints/ directory (except itself), in sorted order. If any script fails, the wrapper exits
-# with the same status code. After running all scripts, it blocks indefinitely to keep the container alive.
-#
-# Usage: Set this script as the container's entrypoint. Place additional entrypoint scripts in /usr/local/bin/entrypoints/.
+# Run startup scripts in sorted order, then supervise Docker and SSH.
 
-set -e
+set -u
 
-echo "[entrypoint-wrapper] Starting entrypoint script execution..."
-SCRIPTS=$(ls /usr/local/bin/entrypoints/* | sort)
-echo "[entrypoint-wrapper] Found scripts: $SCRIPTS"
-for script in $SCRIPTS; do
-    if [ "$script" != "/usr/local/bin/entrypoints/entrypoint-wrapper.sh" ] && [ -x "$script" ]; then
-        echo "[entrypoint-wrapper] Running $script..."
-        "$script"
-        status=$?
-        if [ $status -ne 0 ]; then
-            echo "[entrypoint-wrapper] ERROR: $script exited with status $status" >&2
-            exit $status
+ENTRYPOINT_DIR="/usr/local/bin/entrypoints"
+
+cleanup() {
+    status=$?
+    trap - EXIT INT TERM
+
+    echo "[entrypoint-wrapper] Stopping services..."
+    for service in sshd dockerd; do
+        pid=$(pgrep -xo "$service" 2>/dev/null || true)
+        if [ -n "$pid" ]; then
+            kill "$pid" 2>/dev/null || true
         fi
+    done
+
+    exit "$status"
+}
+
+trap cleanup EXIT
+trap 'exit 143' INT TERM
+
+echo "[entrypoint-wrapper] Starting entrypoint scripts..."
+for script in "$ENTRYPOINT_DIR"/*; do
+    [ -f "$script" ] || continue
+
+    script_name=$(basename "$script")
+    if [ "$script_name" = "entrypoint-wrapper.sh" ] || [ ! -x "$script" ]; then
+        echo "[entrypoint-wrapper] Skipping $script..."
+        continue
+    fi
+
+    echo "[entrypoint-wrapper] Running $script..."
+    if "$script"; then
         echo "[entrypoint-wrapper] Finished $script."
     else
-        echo "[entrypoint-wrapper] Skipping $script (not executable or is wrapper)."
+        status=$?
+        echo "[entrypoint-wrapper] ERROR: $script exited with status $status" >&2
+        exit "$status"
     fi
 done
-echo "[entrypoint-wrapper] All entrypoint scripts executed."
-echo "[entrypoint-wrapper] Checking for /start.sh..."
 
-# Block to keep the container running (main process)
-echo "[entrypoint-wrapper] All entrypoint scripts executed. Container will now block to stay alive."
-tail -f /dev/null
+wait_for_service() {
+    service=$1
+    attempt=1
+
+    while [ "$attempt" -le 30 ]; do
+        if pgrep -x "$service" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 1
+        attempt=$((attempt + 1))
+    done
+
+    echo "[entrypoint-wrapper] ERROR: $service did not start within 30 seconds." >&2
+    return 1
+}
+
+wait_for_service dockerd || exit 1
+wait_for_service sshd || exit 1
+echo "[entrypoint-wrapper] Docker and SSH are running."
+
+while :; do
+    if ! pgrep -x dockerd >/dev/null 2>&1; then
+        echo "[entrypoint-wrapper] ERROR: dockerd stopped." >&2
+        exit 1
+    fi
+
+    if ! pgrep -x sshd >/dev/null 2>&1; then
+        echo "[entrypoint-wrapper] ERROR: sshd stopped." >&2
+        exit 1
+    fi
+
+    sleep 2
+done

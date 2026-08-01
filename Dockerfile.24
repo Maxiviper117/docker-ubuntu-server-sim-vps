@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # ────────────────────────────────────────────────────────────────────
 # 1. Base image and apt speedup
 # ────────────────────────────────────────────────────────────────────
@@ -16,9 +18,11 @@ EOF
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ────────────────────────────────────────────────────────────────────
-# 3. Base packages
+# 3. System and Docker packages
 # ────────────────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt/lists,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     openssh-server \
     curl \
     ca-certificates \
@@ -26,12 +30,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     lsb-release \
     apt-transport-https \
     nano \
-    && rm -rf /var/lib/apt/lists/*
-
-# ────────────────────────────────────────────────────────────────────
-# 4. Docker installation
-# ────────────────────────────────────────────────────────────────────
-RUN install -m 0755 -d /etc/apt/keyrings && \
+    tini \
+    dos2unix && \
+    install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     chmod a+r /etc/apt/keyrings/docker.gpg && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
@@ -42,8 +43,7 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
     docker-ce-cli \
     containerd.io \
     docker-buildx-plugin \
-    docker-compose-plugin \
-    && rm -rf /var/lib/apt/lists/*
+    docker-compose-plugin
 
 # Add root to the docker group to run Docker commands
 RUN usermod -aG docker root
@@ -70,27 +70,20 @@ EXPOSE 80
 EXPOSE 443
 
 # ────────────────────────────────────────────────────────────────────
-# 7. Tini installation
+# 7. Entrypoint scripts
 # ────────────────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y --no-install-recommends tini && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# ────────────────────────────────────────────────────────────────────
-# 8. dos2unix and entrypoint scripts
-# ────────────────────────────────────────────────────────────────────
-RUN apt-get update && apt-get install -y dos2unix && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY .infrastructure/scripts/ /usr/local/bin/entrypoints/
 RUN find /usr/local/bin/entrypoints/ -type f -exec dos2unix {} \; && chmod +x /usr/local/bin/entrypoints/*
 
 # ────────────────────────────────────────────────────────────────────
-# 9. Entrypoint and CMD
+# 8. Entrypoint and CMD
 # ────────────────────────────────────────────────────────────────────
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/entrypoints/entrypoint-wrapper.sh"]
 CMD []
 
 # ────────────────────────────────────────────────────────────────────
-# 10. Build instructions
+# 9. Build instructions
 # ────────────────────────────────────────────────────────────────────
 # Build:
 #   docker buildx build  -t ubuntu24-vps-sim . -f Dockerfile.24
-
 

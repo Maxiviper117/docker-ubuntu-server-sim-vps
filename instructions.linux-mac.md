@@ -1,140 +1,275 @@
-# 🚀 SSH & Docker Setup Guide for `ubuntu24-vps-sim` (Linux/macOS)
+# Ubuntu VPS Simulator Setup for Linux and macOS
 
-This guide helps you run a simulated Ubuntu VPS using Docker and connect to it over SSH on Linux or macOS.
+## Purpose
 
----
+Use this project to run a local Ubuntu 24.04 VPS simulator in Docker.
 
-## 🔐 Step 1: Generate an SSH Key Pair
+The simulator provides SSH access and a Docker daemon for local tests.
 
+## Prerequisites
 
+Install these tools before you start:
 
-Generate an Ed25519 SSH key using 1Password or `ssh-keygen`.
+- Docker Engine or Docker Desktop.
+- Docker Compose v2.
+- Bash.
+- The OpenSSH client.
 
-> [!Note]
-> The key file can be named anything you like. Just be consistent and update the rest of the instructions to match your chosen name.
-
-### Option 1: Using 1Password
-
-Generate an Ed25519 SSH key in 1Password, then **download the private key** and save it to:
-
-```
-$HOME/.ssh/SSH-Key-Linux-Mac
-```
-
-### Option 2: Using `ssh-keygen`
+Confirm that Docker works:
 
 ```bash
-ssh-keygen -t ed25519 -C "your_email@example.com" -f "$HOME/.ssh/SSH-Key-Linux-Mac"
+docker version
+docker compose version
 ```
 
-This creates both public and private keys at the specified path.
+The Docker commands must return version information.
 
----
+## Fast setup
 
-## 📋 Step 2: Add Your Public Key to the `.env` File
+If GNU Make exists, run this command from the project directory:
 
-First, copy the `.env.example` file in the project root and rename it to `.env`:
+```bash
+make setup
+```
+
+The `Makefile` runs the Bash helper on Linux and macOS.
+
+If GNU Make does not exist, run the Bash helper directly:
+
+```bash
+bash helpers/setup.sh
+```
+
+The helper first asks whether you want to create a new key or reuse an existing key.
+
+The helper performs these actions:
+
+1. Create or reuse an Ed25519 SSH key.
+2. Update `.env` and the SSH configuration file.
+3. Build the Docker image.
+4. Start the container.
+5. Wait for the Docker and SSH health checks.
+6. Test the SSH connection.
+
+The helper suggests this key path by default:
+
+```text
+$HOME/.ssh/ubuntu24-vps-sim
+```
+
+Set `VPS_SSH_KEY_PATH` to use another key path:
+
+```bash
+VPS_SSH_KEY_PATH="$HOME/.ssh/my-test-key" bash helpers/setup.sh
+```
+
+The helper creates a key without a passphrase when it creates a new key.
+
+The container keeps existing root SSH keys and adds the configured key when needed.
+
+## Connect to the simulator
+
+After setup, connect with:
+
+```bash
+ssh localhost-root
+```
+
+The SSH service listens on host port `2222`.
+
+## Manual setup
+
+Use these steps if you do not want to use the setup helper.
+
+### 1. Create an SSH key
+
+Create an Ed25519 key:
+
+```bash
+ssh-keygen -t ed25519 -C "ubuntu24-vps-sim" -f "$HOME/.ssh/ubuntu24-vps-sim"
+```
+
+### 2. Create the environment file
+
+Copy the example file:
 
 ```bash
 cp .env.example .env
 ```
 
-Then, copy your public key (e.g., from `$HOME/.ssh/SSH-Key-Linux-Mac.pub`) and paste it into the `SSH_PUB_KEY` variable in your new `.env` file.
-
----
-
-## 🛠️ Step 3: Build the Docker Image
-
-Build the Docker image locally before running the container:
+Read the public key:
 
 ```bash
-docker build -f Dockerfile.24 -t ubuntu24-vps-sim .
+cat "$HOME/.ssh/ubuntu24-vps-sim.pub"
 ```
----
 
-## 🐳 Step 4: Run the Docker Container
+Set the `SSH_PUB_KEY` value in `.env` to the complete public key line.
 
-Start the container using Docker Compose. Make sure your `.env` file is configured with your public key.
+### 3. Build and start the simulator
 
 ```bash
-docker compose -f docker-compose.24.yml up -d
+docker compose -f docker-compose.24.yml up -d --build
 ```
 
----
+### 4. Check the container status
 
-## ⚙️ Step 5: Configure SSH for Easy Access
-
-
-Edit (or create) your SSH config file at `~/.ssh/config` and add:
-
+```bash
+docker compose -f docker-compose.24.yml ps
 ```
+
+The `vps` service should show `healthy`.
+
+If the service does not show `healthy`, read the logs:
+
+```bash
+docker compose -f docker-compose.24.yml logs --tail=80 vps
+```
+
+### 5. Add the SSH configuration
+
+Add this block to `$HOME/.ssh/config`:
+
+```text
 Host localhost-root
     HostName localhost
     User root
     Port 2222
-    IdentityFile ~/.ssh/SSH-Key-Linux-Mac
+    IdentityFile ~/.ssh/ubuntu24-vps-sim
+    IdentitiesOnly yes
+    StrictHostKeyChecking accept-new
 ```
 
-> [!NOTE]
-> If using a 1Password-managed key, approve the connection when prompted via the 1Password app.
-> 
-> Connect with:
-> 
-> ```bash
-> ssh localhost-root
-> ```
-
----
-
-## 📤 Step 6: (Optional) Temporarily Replace the Public Key
-
-To temporarily replace the authorized key after the container is running:
+Set the file permissions:
 
 ```bash
-docker cp "$HOME/.ssh/SSH-Key-Linux-Mac.pub" ubuntu24-vps-sim:/root/.ssh/authorized_keys
+chmod 600 "$HOME/.ssh/config"
 ```
 
-This replaces the entire `authorized_keys` file. The key from `SSH_PUB_KEY` in `.env` is restored the next time the container starts. Update `.env` for a persistent change.
-
----
-
-## 🔌 Step 7: Connect via SSH
-
-Connect using the configured host alias:
+### 6. Test SSH access
 
 ```bash
-ssh localhost-root
+ssh localhost-root "echo SSH login successful"
 ```
 
----
+## Useful commands
 
-## 🧯 Troubleshooting: SSH Host Identification Has Changed
+Use these lifecycle helpers from the project directory:
 
-If you see:
-
+```bash
+make up
+make status
+make logs
+make shell
+make down
+make reset
 ```
-WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!
+
+If GNU Make does not exist, run these commands:
+
+```bash
+bash helpers/up.sh
+bash helpers/status.sh
+bash helpers/logs.sh
+bash helpers/shell.sh
+bash helpers/down.sh
+bash helpers/reset.sh
 ```
 
-Fix it with:
+The reset helper asks for `RESET` before it deletes the Docker volume.
+
+The persistent mode keeps Docker data in the `vps_docker` volume.
+
+Use `down` to stop the simulator and keep its data.
+
+Use `up` to start the simulator again with the same data.
+
+The clean mode deletes the volume and its Docker data.
+
+Use `reset` for the clean mode.
+
+The simulator stops after a failure. Docker does not restart it automatically.
+
+Show service status:
+
+```bash
+docker compose -f docker-compose.24.yml ps
+```
+
+Read service logs:
+
+```bash
+docker compose -f docker-compose.24.yml logs -f vps
+```
+
+Open a shell without SSH:
+
+```bash
+docker exec -it ubuntu24-vps-sim bash
+```
+
+Stop the simulator and keep its Docker data:
+
+```bash
+docker compose -f docker-compose.24.yml down
+```
+
+Stop the simulator and delete its Docker data:
+
+```bash
+docker compose -f docker-compose.24.yml down -v
+```
+
+## Troubleshooting
+
+### Docker does not run
+
+Start Docker Desktop, or start the Docker Engine service.
+
+Run `docker version` again.
+
+### Port `2222` is in use
+
+Stop the process that uses port `2222`.
+
+Then run the setup helper again.
+
+### SSH reports a changed host key
+
+Remove the old key entry:
 
 ```bash
 ssh-keygen -R "[localhost]:2222"
 ```
 
-Then try again:
+Run the setup helper again.
+
+### The container does not become healthy
+
+Read the service logs:
 
 ```bash
-ssh localhost-root
+docker compose -f docker-compose.24.yml logs --tail=80 vps
 ```
 
----
+Check that `.env` contains a complete public key line.
 
-## ✅ Done!
+## Run multiple simulators
 
-You’ve successfully:
+Give each simulator a different project name, SSH alias, and SSH port:
 
-* Generated and configured SSH keys
-* Supplied your public key to the container at runtime
-* Started the container
-* Connected securely using an alias
+```bash
+COMPOSE_PROJECT_NAME=ubuntu24-vps-sim-b \
+VPS_SSH_ALIAS=localhost-root-b \
+VPS_SSH_PORT=2223 \
+make setup
+```
+
+Set a different `VPS_DOCKER_API_PORT` when the second simulator needs Docker API access from the host.
+
+## Security limits
+
+> [!WARNING]
+> This simulator is not a security boundary. It uses privileged mode and exposes an unauthenticated Docker API on port `2375` through localhost.
+> Do not run untrusted workloads in this simulator. Use a virtual machine or another isolated environment for untrusted code.
+
+Remove the port mapping when nested Docker tests do not need host access.

@@ -8,6 +8,10 @@ npm-debug.log
 .git
 .gitignore
 
+# Ignore local environment and SSH public key files
+.env
+*.pub
+
 # Optionally ignore Dockerfile and .dockerignore if not needed in context
 Dockerfile
 .dockerignore
